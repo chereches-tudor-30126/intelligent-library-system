@@ -1,0 +1,72 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /api/v1
+
+spring:
+  application:
+    name: intelligent-library-system
+
+  #Database configuration
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/library_db
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:password}
+    driver-class-name: org.postgresql.Driver
+
+  #auto-exec
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema.sql
+      continue-on-error: true
+
+  #hibernate
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        jdbc:
+          time_zone: UTC
+
+
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 5MB
+
+#security
+app:
+  security:
+    jwt:
+      secret-key: ${JWT_SECRET_KEY} # Trebuie generată o cheie securizată
+      expiration-ms: 3600000 # 1 oră
+      refresh-token-expiration-ms: 604800000 # 7 zile (pentru rotație) [7]
+
+  #ai
+  ai:
+    bedrock:
+      region: us-east-1
+      model-id: anthropic.claude-3-sonnet # Exemplu model pentru asistent/căutare
+    recommendation:
+      min-score: 0.75 # Prag pentru motorul de recomandări (Cosine Similarity) [6]
+
+#notifications
+messaging:
+  websocket:
+    endpoint: /ws-notifications
+    allowed-origins: "http://localhost:3000" # URL-ul frontend-ului React
+
+#log
+logging:
+  level:
+    root: INFO
+    com.library: DEBUG
+    org.hibernate.SQL: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
