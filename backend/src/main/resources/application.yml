@@ -44,10 +44,14 @@ spring:
 app:
   security:
     jwt:
-      secret-key: ${JWT_SECRET_KEY} # Trebuie generată o cheie securizată
-      expiration-ms: 3600000 # 1 oră
-      refresh-token-expiration-ms: 604800000 # 7 zile (pentru rotație) [7]
 
+      secret-key: ${JWT_SECRET_KEY}
+
+      access-token-expiration-ms: 900000
+
+      refresh-token-expiration-ms: 604800000
+
+      max-sessions-per-user: 5
   #ai
   ai:
     bedrock:

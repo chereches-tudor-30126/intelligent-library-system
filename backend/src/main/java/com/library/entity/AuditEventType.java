@@ -1,5 +1,5 @@
 package com.library.entity;
-implement JPA domain model and data access layer
+
 public enum AuditEventType {
     USER_LOGIN,
     USER_LOGOUT,

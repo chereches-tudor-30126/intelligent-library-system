@@ -31,6 +31,7 @@ frontend/yarn-error.log*
 ### --- SECURITY --- ###
 .env
 .env.local
+backend/.env
 frontend/.env
 backend/src/main/resources/application-local.yml
 backend/src/main/resources/application-dev.yml
