@@ -74,3 +74,11 @@ logging:
     org.hibernate.SQL: DEBUG
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+
+library:
+  borrow:
+    duration-days: 14
+    max-extensions: 2
+    extension-days: 7
+    fine-per-day: 0.50
+    max-active-borrows: 5

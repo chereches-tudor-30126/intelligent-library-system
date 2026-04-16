@@ -31,9 +31,9 @@ public class SecurityConfig {
     // Endpoints that do NOT require a valid JWT
     // -------------------------------------------------------------------------
     private static final String[] PUBLIC_POST = {
-            "/api/auth/login",
-            "/api/auth/register",
-            "/api/auth/refresh"
+            "/api/v1/auth/login",
+            "/api/v1/auth/register",
+            "/api/v1/auth/refresh"
     };
 
     private static final String[] PUBLIC_GET = {
