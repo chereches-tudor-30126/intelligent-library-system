@@ -1,11 +1,11 @@
 package com.library.controller;
 
-import com.library.entity.Book;
+import com.library.dto.response.BookResponse;
 import com.library.entity.BookType;
 import com.library.service.book.BookService;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -22,7 +22,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.library.entity.Book;
+import jakarta.validation.Valid;
+
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/books")
@@ -31,12 +35,8 @@ public class BookController {
 
     private final BookService bookService;
 
-    // -------------------------------------------------------------------------
-    // GET /api/v1/books — public, paginated, optional type filter
-    // -------------------------------------------------------------------------
-
     @GetMapping
-    public ResponseEntity<Page<Book>> getAll(
+    public ResponseEntity<Page<BookResponse>> getAll(
             @RequestParam(defaultValue = "0")   int page,
             @RequestParam(defaultValue = "20")  int size,
             @RequestParam(defaultValue = "title") String sortBy,
@@ -48,79 +48,55 @@ public class BookController {
                 : Sort.by(sortBy).ascending();
         Pageable pageable = PageRequest.of(page, size, sort);
 
-        Page<Book> result = (type != null)
+        var books = (type != null)
                 ? bookService.getByType(type, pageable)
                 : bookService.getAll(pageable);
 
-        return ResponseEntity.ok(result);
+        return ResponseEntity.ok(toPage(books, pageable));
     }
 
-    // -------------------------------------------------------------------------
-    // GET /api/v1/books/available — public
-    // -------------------------------------------------------------------------
-
     @GetMapping("/available")
-    public ResponseEntity<Page<Book>> getAvailable(
+    public ResponseEntity<Page<BookResponse>> getAvailable(
             @RequestParam(defaultValue = "0")  int page,
             @RequestParam(defaultValue = "20") int size) {
 
         Pageable pageable = PageRequest.of(page, size);
-        return ResponseEntity.ok(bookService.getAvailable(pageable));
+        return ResponseEntity.ok(toPage(bookService.getAvailable(pageable), pageable));
     }
 
-    // -------------------------------------------------------------------------
-    // GET /api/v1/books/search?q=keyword — public, uses trigram index
-    // -------------------------------------------------------------------------
-
     @GetMapping("/search")
-    public ResponseEntity<Page<Book>> search(
+    public ResponseEntity<Page<BookResponse>> search(
             @RequestParam String q,
             @RequestParam(defaultValue = "0")  int page,
             @RequestParam(defaultValue = "20") int size) {
 
         Pageable pageable = PageRequest.of(page, size);
-        return ResponseEntity.ok(bookService.search(q, pageable));
+        return ResponseEntity.ok(toPage(bookService.search(q, pageable), pageable));
     }
-
-    // -------------------------------------------------------------------------
-    // GET /api/v1/books/{id} — public
-    // -------------------------------------------------------------------------
 
     @GetMapping("/{id}")
-    public ResponseEntity<Book> getById(@PathVariable UUID id) {
-        return ResponseEntity.ok(bookService.getById(id));
+    public ResponseEntity<BookResponse> getById(@PathVariable UUID id) {
+        return ResponseEntity.ok(BookResponse.from(bookService.getById(id)));
     }
-
-    // -------------------------------------------------------------------------
-    // POST /api/v1/books — LIBRARIAN, ADMIN only
-    // -------------------------------------------------------------------------
 
     @PostMapping
     @PreAuthorize("hasAnyRole('LIBRARIAN', 'ADMIN')")
-    public ResponseEntity<Book> create(
+    public ResponseEntity<BookResponse> create(
             @Valid @RequestBody Book book,
             @RequestParam(required = false) UUID[] authorIds) {
 
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(bookService.create(book, authorIds));
+                .body(BookResponse.from(bookService.create(book, authorIds)));
     }
-
-    // -------------------------------------------------------------------------
-    // PUT /api/v1/books/{id} — LIBRARIAN, ADMIN only
-    // -------------------------------------------------------------------------
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('LIBRARIAN', 'ADMIN')")
-    public ResponseEntity<Book> update(
+    public ResponseEntity<BookResponse> update(
             @PathVariable UUID id,
             @Valid @RequestBody Book book) {
 
-        return ResponseEntity.ok(bookService.update(id, book));
+        return ResponseEntity.ok(BookResponse.from(bookService.update(id, book)));
     }
-
-    // -------------------------------------------------------------------------
-    // DELETE /api/v1/books/{id} — soft delete, ADMIN only
-    // -------------------------------------------------------------------------
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
@@ -129,31 +105,31 @@ public class BookController {
         return ResponseEntity.noContent().build();
     }
 
-    // -------------------------------------------------------------------------
-    // POST /api/v1/books/{bookId}/authors/{authorId} — LIBRARIAN, ADMIN
-    // -------------------------------------------------------------------------
-
     @PostMapping("/{bookId}/authors/{authorId}")
     @PreAuthorize("hasAnyRole('LIBRARIAN', 'ADMIN')")
     public ResponseEntity<Void> addAuthor(
             @PathVariable UUID bookId,
             @PathVariable UUID authorId) {
-
         bookService.addAuthor(bookId, authorId);
         return ResponseEntity.noContent().build();
     }
-
-    // -------------------------------------------------------------------------
-    // DELETE /api/v1/books/{bookId}/authors/{authorId} — LIBRARIAN, ADMIN
-    // -------------------------------------------------------------------------
 
     @DeleteMapping("/{bookId}/authors/{authorId}")
     @PreAuthorize("hasAnyRole('LIBRARIAN', 'ADMIN')")
     public ResponseEntity<Void> removeAuthor(
             @PathVariable UUID bookId,
             @PathVariable UUID authorId) {
-
         bookService.removeAuthor(bookId, authorId);
         return ResponseEntity.noContent().build();
+    }
+
+    private Page<BookResponse> toPage(Page<Book> books, Pageable pageable) {
+        return new PageImpl<>(
+                books.getContent().stream()
+                        .map(BookResponse::from)
+                        .collect(Collectors.toList()),
+                pageable,
+                books.getTotalElements()
+        );
     }
 }
