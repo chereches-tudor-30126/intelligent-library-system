@@ -77,7 +77,7 @@ public class AuditLogServiceImpl implements AuditLogService {
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void logUserRegister(User user) {
-        persist(user, AuditEventType.USER_REGISTER, "User", user.getId(),
+        persist(null, AuditEventType.USER_REGISTER, "User", user.getId(),
                 "New registration: " + user.getEmail(), null, toMap(user));
     }
 

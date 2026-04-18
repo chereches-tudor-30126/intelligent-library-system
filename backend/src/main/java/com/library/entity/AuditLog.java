@@ -30,6 +30,7 @@ public class AuditLog {
     private User user;
 
     @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(name = "event_type", nullable = false, columnDefinition = "audit_event_type")
     private AuditEventType eventType;
 
@@ -55,6 +56,7 @@ public class AuditLog {
     private Map<String, Object> newValue;
 
     @Column(name = "ip_address", columnDefinition = "inet")
+    @JdbcTypeCode(org.hibernate.type.SqlTypes.INET)
     private String ipAddress;
 
     @Column(name = "user_agent", columnDefinition = "TEXT")

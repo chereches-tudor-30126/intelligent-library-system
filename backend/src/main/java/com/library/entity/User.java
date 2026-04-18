@@ -42,6 +42,7 @@ public class User {
     private String lastName;
 
     @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(name = "role", nullable = false, columnDefinition = "user_role")
     @Builder.Default
     private Role role = Role.STUDENT;

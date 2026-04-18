@@ -1,79 +1,49 @@
 server:
   port: 8080
-  servlet:
-    context-path: /api/v1
+  # FIX 1: context-path ELIMINAT — controllerele au deja /api/v1 in @RequestMapping
+  # Daca pastrezi context-path, URL-urile devin /api/v1/api/v1/auth/login
 
 spring:
   application:
     name: intelligent-library-system
 
-  #Database configuration
-
   datasource:
-    url: jdbc:postgresql://localhost:5432/library_db
+    # FIX 2: library_db → library_system (baza creata de tine in DBeaver)
+    url: jdbc:postgresql://localhost:5432/library_system
     username: ${DB_USERNAME:postgres}
-    password: ${DB_PASSWORD:password}
+    password: ${DB_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver
 
-  #auto-exec
   sql:
     init:
       mode: always
       schema-locations: classpath:schema.sql
       continue-on-error: true
 
-  #hibernate
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: create
     show-sql: true
+    open-in-view: false
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
         jdbc:
           time_zone: UTC
-
 
   servlet:
     multipart:
       max-file-size: 5MB
       max-request-size: 5MB
 
-#security
-app:
-  security:
-    jwt:
-
-      secret-key: ${JWT_SECRET_KEY}
-
-      access-token-expiration-ms: 900000
-
-      refresh-token-expiration-ms: 604800000
-
-      max-sessions-per-user: 5
-  #ai
-  ai:
-    bedrock:
-      region: us-east-1
-      model-id: anthropic.claude-3-sonnet # Exemplu model pentru asistent/căutare
-    recommendation:
-      min-score: 0.75 # Prag pentru motorul de recomandări (Cosine Similarity) [6]
-
-#notifications
-messaging:
-  websocket:
-    endpoint: /ws-notifications
-    allowed-origins: "http://localhost:3000" # URL-ul frontend-ului React
-
-#log
-logging:
-  level:
-    root: INFO
-    com.library: DEBUG
-    org.hibernate.SQL: DEBUG
-  pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+# FIX 3: property path-urile TREBUIE sa fie identice cu @Value din JwtService
+# JwtService citeste: ${jwt.secret}, ${jwt.access-token-expiration}, ${jwt.refresh-token-expiration}
+# Vechiul yml avea: app.security.jwt.secret-key — NU se potrivea, de aceea crasha
+jwt:
+  secret: ${JWT_SECRET}
+  access-token-expiration: 900000
+  refresh-token-expiration: 604800000
+  max-sessions-per-user: 5
 
 library:
   borrow:
@@ -82,3 +52,17 @@ library:
     extension-days: 7
     fine-per-day: 0.50
     max-active-borrows: 5
+
+messaging:
+  websocket:
+    endpoint: /ws-notifications
+    allowed-origins: "http://localhost:3000"
+
+logging:
+  level:
+    root: INFO
+    com.library: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.springframework.security: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
